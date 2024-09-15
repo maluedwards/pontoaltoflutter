@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # ponto_alto
 
 A new Flutter project.
@@ -27,3 +28,6 @@ the `lib/src/localization` directory.
 
 To support additional languages, please visit the tutorial on
 [Internationalizing Flutter apps](https://flutter.dev/to/internationalization).
+=======
+# pontoaltoflutter
+>>>>>>> 0cf080b6d9e972b0b337c5bb792041ba1ec8bc56
