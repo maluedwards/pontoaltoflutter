@@ -3,27 +3,27 @@ import 'package:path/path.dart';
 
 class DatabaseHelper {
   static const _databaseName = "pontoalto_database.db";
-  static const _databaseVersion = 3;
+  static const _databaseVersion = 4;
 
   static const recipeTable = 'recipe';
   static const stitchRowTable = 'stitch_row';
   static const projectTable = 'project';
 
-  //Recipe table columns
+  // Recipe table columns
   static const columnRecipeId = 'id';
   static const columnRecipeName = 'name';
   static const columnRecipeDifficulty = 'difficulty';
   static const columnRecipeTotalStitches = 'total_stitches';
 
-  //Stitch row table columns
+  // Stitch row table columns
   static const columnRowId = 'row_id';
   static const columnRowInstructions = 'instructions';
   static const columnRowStitches = 'stitches';
-  static const columnRowRecipeId =
-      'recipe_id'; //Foreign key linking to recipe table
+  static const columnRowRecipeId = 'recipe_id'; // Foreign key linking to recipe table
 
-  //Project table columns
+  // Project table columns
   static const columnProjectId = 'project_id';
+  static const columnProjectName = 'project_name';
   static const columnProjectDoneStitches = 'done_stitches';
   static const columnProjectCurrentStitch = 'current_stitch';
   static const columnProjectCurrentRowId = 'current_row';
@@ -49,7 +49,7 @@ class DatabaseHelper {
     );
   }
 
-  //Table creation
+  // Table creation
   Future _onCreate(Database db, int version) async {
     await db.execute('''
       CREATE TABLE $recipeTable (
@@ -69,15 +69,16 @@ class DatabaseHelper {
         FOREIGN KEY ($columnRowRecipeId) REFERENCES $recipeTable ($columnRecipeId)
       )
     ''');
-    // Create project table
+
     await db.execute('''
       CREATE TABLE $projectTable (
         $columnProjectId INTEGER PRIMARY KEY AUTOINCREMENT,
+        $columnProjectName TEXT NOT NULL,
         $columnProjectDoneStitches INTEGER NOT NULL DEFAULT 0,
         $columnProjectCurrentStitch INTEGER NOT NULL DEFAULT 0,
         $columnProjectCurrentRowId INTEGER NOT NULL,
         $columnProjectRecipeId INTEGER NOT NULL,
-        FOREIGN KEY ($columnProjectCurrentRowId) REFERENCES $stitchRowTable ($columnRowId)
+        FOREIGN KEY ($columnProjectCurrentRowId) REFERENCES $stitchRowTable ($columnRowId),
         FOREIGN KEY ($columnProjectRecipeId) REFERENCES $recipeTable ($columnRecipeId)
       )
     ''');
@@ -85,36 +86,33 @@ class DatabaseHelper {
 
   // Handle migration for new database versions
   Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 5) {
-      // Add current_row_id column to project table
+    if (oldVersion < 4) {
       await db.execute('''
-        ALTER TABLE $projectTable ADD COLUMN $columnProjectCurrentRowId INTEGER,
-        ADD FOREIGN KEY ($columnProjectCurrentRowId) REFERENCES $stitchRowTable ($columnRowId)
+        ALTER TABLE $projectTable ADD COLUMN $columnProjectName TEXT;
       ''');
     }
   }
 
-  //New recipe
+  // New recipe
   Future<int> insertRecipe(Map<String, dynamic> recipe) async {
     Database db = await instance.database;
     return await db.insert(recipeTable, recipe);
   }
 
-  //New row
+  // New row
   Future<int> insertStitchRow(Map<String, dynamic> row) async {
     Database db = await instance.database;
     int result = await db.insert(stitchRowTable, row);
 
-    //Update total stitches for the recipe
+    // Update total stitches for the recipe
     int recipeId = row[columnRowRecipeId];
     await _updateTotalStitches(db, recipeId);
 
     return result;
   }
 
-  //Updating total stitches after stitch row insertion, update, or deletion
+  // Updating total stitches after stitch row insertion, update, or deletion
   Future<void> _updateTotalStitches(Database db, int recipeId) async {
-    //Sum of all stitches from rows with recipeID
     List<Map<String, dynamic>> result = await db.rawQuery('''
       SELECT SUM($columnRowStitches) as total_stitches
       FROM $stitchRowTable
@@ -123,7 +121,6 @@ class DatabaseHelper {
 
     int totalStitches = result.first['total_stitches'] ?? 0;
 
-    //Updating recipe with the new total stitches
     await db.update(
       recipeTable,
       {columnRecipeTotalStitches: totalStitches},
@@ -132,13 +129,13 @@ class DatabaseHelper {
     );
   }
 
-  //Query all recipes
+  // Query all recipes
   Future<List<Map<String, dynamic>>> queryAllRecipes() async {
     Database db = await instance.database;
     return await db.query(recipeTable);
   }
 
-  //Query all stitch rows for a specific recipe
+  // Query all stitch rows for a specific recipe
   Future<List<Map<String, dynamic>>> queryStitchRows(int recipeId) async {
     Database db = await instance.database;
     return await db.query(
@@ -148,40 +145,43 @@ class DatabaseHelper {
     );
   }
 
-  //Delete a stitch row
+  // Delete a stitch row
   Future<int> deleteStitchRow(int rowId, int recipeId) async {
     Database db = await instance.database;
     int result = await db
         .delete(stitchRowTable, where: '$columnRowId = ?', whereArgs: [rowId]);
 
-    // Update total stitches for the related recipe
     await _updateTotalStitches(db, recipeId);
 
     return result;
   }
 
-  //Delete recipe
+  // Delete recipe
   Future<int> deleteRecipe(int recipeId) async {
     Database db = await instance.database;
-    int result = await db.delete(recipeTable,
+    return await db.delete(recipeTable,
         where: '$columnRecipeId = ?', whereArgs: [recipeId]);
-    return result;
   }
 
-  //PROJECT
-  //Insert new project
+  // Insert new project
   Future<int> insertProject(Map<String, dynamic> project) async {
     Database db = await instance.database;
     return await db.insert(projectTable, project);
   }
 
-  //Query all projects
-  Future<List<Map<String, dynamic>>> queryAllProjects() async {
+  // Query all projects with recipe name using a JOIN
+  Future<List<Map<String, dynamic>>> queryAllProjectsWithRecipe() async {
     Database db = await instance.database;
-    return await db.query(projectTable);
+    return await db.rawQuery('''
+      SELECT p.$columnProjectId, p.$columnProjectName, p.$columnProjectDoneStitches, 
+             p.$columnProjectCurrentStitch, p.$columnProjectCurrentRowId, 
+             p.$columnProjectRecipeId, r.$columnRecipeName
+      FROM $projectTable p
+      JOIN $recipeTable r ON p.$columnProjectRecipeId = r.$columnRecipeId
+    ''');
   }
 
-  //Update project
+  // Update project
   Future<int> updateProject(Map<String, dynamic> project) async {
     Database db = await instance.database;
     int projectId = project[columnProjectId];

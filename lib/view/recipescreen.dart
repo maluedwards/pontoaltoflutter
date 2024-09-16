@@ -1,94 +1,118 @@
 import 'package:flutter/material.dart';
-import 'package:ponto_alto/model/reciperepository.dart';
+import 'package:ponto_alto/viewmodel/recipe_viewmodel.dart';
+import 'package:provider/provider.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:ponto_alto/view/recipedetail.dart';
 
-class RecipesScreen extends StatelessWidget {
-  final RecipeRepository _recipeRepository = RecipeRepository();
+class RecipesScreen extends StatefulWidget {
+  const RecipesScreen({super.key});
 
-  RecipesScreen({super.key});
+  @override
+  _RecipesScreenState createState() => _RecipesScreenState();
+}
+
+class _RecipesScreenState extends State<RecipesScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Carregar receitas no initState
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final recipeViewModel = Provider.of<RecipeViewModel>(context, listen: false);
+      recipeViewModel.fetchAllRecipes();
+    });
+  }
+
+  Future<void> _deleteRecipe(BuildContext context, String recipeName) async {
+    final recipeViewModel = Provider.of<RecipeViewModel>(context, listen: false);
+    await recipeViewModel.deleteRecipe(recipeName);
+    recipeViewModel.fetchAllRecipes(); // Recarrega as receitas após a exclusão
+  }
 
   @override
   Widget build(BuildContext context) {
+    final recipeViewModel = Provider.of<RecipeViewModel>(context);
+
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        title: const Text('Ponto Alto'),
+        title: Text(AppLocalizations.of(context)!.recipesTitle),
         backgroundColor: const Color(0xFFB685E8),
       ),
-      body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: _recipeRepository.getAllRecipes(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No recipes found.'));
-          }
-
-          final recipes = snapshot.data!;
-
-          return Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0xFFB685E8), Color(0xFFFFFFFF)],
-              ),
-            ),
+      body: recipeViewModel.isLoading
+          ? const Center(
+        child: CircularProgressIndicator(),
+      )
+          : recipeViewModel.recipes.isEmpty
+          ? Center(
+        child: Text(
+          AppLocalizations.of(context)!.noRecipesMessage,
+          style: const TextStyle(
+            fontSize: 18,
+            color: Color(0xFF5941A9),
+          ),
+        ),
+      )
+          : Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFB685E8), Color(0xFFFFFFFF)],
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Card(
+            elevation: 6,
             child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Card(
-                elevation: 6,
-                child: Padding(
-                  padding: const EdgeInsets.all(30.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Recipes List',
-                        style: TextStyle(
-                          fontFamily: 'PoetsenOne',
-                          fontSize: 24,
-                          color: Color(0xFFFF84CE),
-                        ),
-                      ),
-                      const Divider(),
-                      Expanded(
-                        child: ListView.separated(
-                          itemCount: recipes.length,
-                          itemBuilder: (context, index) {
-                            final recipe = recipes[index];
-                            return ListTile(
-                              title: Text(recipe['name']),
-                              subtitle:
-                                  Text('Difficulty: ${recipe['difficulty']}'),
-                              onTap: () {
-                                // Navigate to the recipe details screen or handle click
-                              },
+              padding: const EdgeInsets.all(30.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    AppLocalizations.of(context)!.recipesListTitle,
+                    style: const TextStyle(
+                      fontFamily: 'PoetsenOne',
+                      fontSize: 24,
+                      color: Color(0xFFFF84CE),
+                    ),
+                  ),
+                  const Divider(),
+                  Expanded(
+                    child: ListView.separated(
+                      itemCount: recipeViewModel.recipes.length,
+                      itemBuilder: (context, index) {
+                        final recipe = recipeViewModel.recipes[index];
+                        return ListTile(
+                          title: Text(recipe['name']),
+                          subtitle: Text(
+                            '${AppLocalizations.of(context)!.difficultyField}: ${recipe['difficulty']}',
+                          ),
+                          onTap: () {
+                            // Usando Navigator local (do RecipesScreen) para manter a BottomNavigationBar
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => RecipeDetails(recipeName: recipe['name']),
+                              ),
                             );
                           },
-                          separatorBuilder: (context, index) => const Divider(),
-                        ),
-                      ),
-                    ],
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete),
+                            onPressed: () {
+                              _deleteRecipe(context, recipe['name']);
+                            },
+                          ),
+                        );
+                      },
+                      separatorBuilder: (context, index) => const Divider(),
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
-          );
-        },
+          ),
+        ),
       ),
     );
-  }
-}
-
-class DifficultyMapper {
-  static const Map<int, String> difficultyMap = {
-    1: 'Baixa',
-    2: 'Média',
-    3: 'Alta',
-  };
-
-  static String getDifficultyText(int difficulty) {
-    return difficultyMap[difficulty] ?? 'Desconhecida';
   }
 }

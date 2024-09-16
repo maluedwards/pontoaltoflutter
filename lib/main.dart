@@ -1,37 +1,99 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:ponto_alto/view/homescreen.dart';
 import 'package:ponto_alto/view/newrecipe.dart';
 import 'package:ponto_alto/view/recipescreen.dart';
+import 'package:ponto_alto/view/recipedetail.dart';
+import 'package:ponto_alto/view/newproject.dart';
+import 'package:ponto_alto/view/projectdetail.dart'; // Importa a tela de detalhe do projeto
+import 'package:ponto_alto/viewmodel/recipe_viewmodel.dart';
+import 'package:ponto_alto/viewmodel/project_viewmodel.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'src/settings/settings_controller.dart';
 import 'src/settings/settings_service.dart';
 
+void logError(String error) {
+  debugPrint('App Error: $error');
+}
+
 void main() async {
-  // Set up the SettingsController, which will glue user settings to multiple
-  // Flutter Widgets.
+  WidgetsFlutterBinding.ensureInitialized();
+
   final settingsController = SettingsController(SettingsService());
 
-  // Load the user's preferred theme while the splash screen is displayed.
-  // This prevents a sudden theme change when the app is first displayed.
-  await settingsController.loadSettings();
+  try {
+    await settingsController.loadSettings();
+    logError('Settings loaded successfully.');
+  } catch (e) {
+    logError('Failed to load settings: $e');
+  }
 
-  // Run the app and pass in the SettingsController. The app listens to the
-  // SettingsController for changes, then passes it further down to the
-  // SettingsView.
-  runApp(const PontoAltoApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => RecipeViewModel(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => ProjectViewModel()..fetchAllProjects(), // Garante o carregamento dos projetos ao inicializar
+          //..deleteAllProjects(), // Comentei a linha que exclui todos os projetos
+        ),
+      ],
+      child: PontoAltoApp(settingsController: settingsController),
+    ),
+  );
 }
 
 class PontoAltoApp extends StatelessWidget {
-  const PontoAltoApp({Key? key}) : super(key: key);
+  const PontoAltoApp({super.key, required this.settingsController});
+
+  final SettingsController settingsController;
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Ponto Alto',
-      theme: ThemeData(
-        primarySwatch: Colors.deepPurple,
-      ),
-      home: const NavigationExample(),
+    return AnimatedBuilder(
+      animation: settingsController,
+      builder: (BuildContext context, Widget? child) {
+        return MaterialApp(
+          title: 'Ponto Alto',
+          theme: ThemeData(
+            primarySwatch: Colors.deepPurple,
+          ),
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [
+            Locale('en', ''), // Inglês
+            Locale('pt', ''), // Português
+          ],
+          home: const NavigationExample(),
+          // Adiciona a rota do ProjectDetail
+          onGenerateRoute: (settings) {
+            if (settings.name == '/recipe-detail') {
+              final recipeName = settings.arguments as String;
+              return MaterialPageRoute(
+                builder: (context) => RecipeDetails(recipeName: recipeName),
+              );
+            } else if (settings.name == '/new-project') {
+              final recipeName = settings.arguments as String;
+              return MaterialPageRoute(
+                builder: (context) => NewProjectScreen(recipeName: recipeName),
+              );
+            } else if (settings.name == '/project-detail') {
+              final projectName = settings.arguments as String;
+              return MaterialPageRoute(
+                builder: (context) => ProjectDetail(projectName: projectName),
+              );
+            }
+            return null;
+          },
+        );
+      },
     );
   }
 }
@@ -44,49 +106,76 @@ class NavigationExample extends StatefulWidget {
 }
 
 class _NavigationExampleState extends State<NavigationExample> {
-  int currentPageIndex = 1;
+  int currentPageIndex = 1; // Inicializa a tela principal como a HomeScreen
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+
+  void _selectPage(int index) {
+    setState(() {
+      currentPageIndex = index;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
     return Scaffold(
       bottomNavigationBar: NavigationBar(
-        onDestinationSelected: (int index) {
-          setState(() {
-            currentPageIndex = index;
-          });
-        },
-        indicatorColor: Colors.purple,
+        onDestinationSelected: _selectPage,
         selectedIndex: currentPageIndex,
-        destinations: const <Widget>[
+        destinations: <Widget>[
           NavigationDestination(
-            selectedIcon: Icon(Icons.home),
-            icon: Icon(Icons.book),
-            label: 'Recipes',
+            icon: const Icon(Icons.book),
+            label: AppLocalizations.of(context)!.recipesTitle,
           ),
           NavigationDestination(
-            icon: Badge(child: Icon(Icons.home)),
-            label: 'Home',
+            icon: const Icon(Icons.home),
+            label: AppLocalizations.of(context)!.homeTitle,
           ),
           NavigationDestination(
-            icon: Badge(
-              label: Text('2'),
-              child: Icon(Icons.create),
-            ),
-            label: 'New Recipe',
+            icon: const Icon(Icons.create),
+            label: AppLocalizations.of(context)!.newRecipeTitle,
           ),
         ],
       ),
-      body: <Widget>[
-        /// Notifications page
-        RecipesScreen(),
+      body: IndexedStack(
+        index: currentPageIndex,
+        children: [
+          _buildNestedNavigator(), // Navigator para a lista de receitas e detalhes
+          Consumer<ProjectViewModel>(
+            builder: (context, projectViewModel, child) {
+              return const HomeScreen(); // A HomeScreen consome os projetos do ProjectViewModel
+            },
+          ),
+          const NewRecipeScreen(),
+        ],
+      ),
+    );
+  }
 
-        /// Home page
-        HomeScreen(projects: []),
-
-        /// Messages page
-        NewRecipeScreen(),
-      ][currentPageIndex],
+  Widget _buildNestedNavigator() {
+    return Navigator(
+      key: _navigatorKey,
+      onGenerateRoute: (RouteSettings settings) {
+        WidgetBuilder builder;
+        switch (settings.name) {
+          case '/recipe-detail':
+            final recipeName = settings.arguments as String;
+            builder = (BuildContext _) => RecipeDetails(recipeName: recipeName);
+            break;
+          case '/new-project':
+            final recipeName = settings.arguments as String;
+            builder = (BuildContext _) => NewProjectScreen(recipeName: recipeName);
+            break;
+          case '/project-detail': // Adiciona o tratamento da rota project-detail no Navigator
+            final projectName = settings.arguments as String;
+            builder = (BuildContext _) => ProjectDetail(projectName: projectName);
+            break;
+          case '/':
+          default:
+            builder = (BuildContext _) => const RecipesScreen();
+            break;
+        }
+        return MaterialPageRoute(builder: builder, settings: settings);
+      },
     );
   }
 }

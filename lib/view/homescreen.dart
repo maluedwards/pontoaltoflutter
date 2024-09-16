@@ -1,26 +1,39 @@
 import 'package:flutter/material.dart';
-import 'package:ponto_alto/view/projectdetail.dart';
-
-class Project {
-  final String projectName;
-  final String recipeName;
-
-  Project({required this.projectName, required this.recipeName});
-}
+import 'package:ponto_alto/viewmodel/project_viewmodel.dart';
+import 'package:provider/provider.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class HomeScreen extends StatelessWidget {
-  final List<Project> projects;
-
-  const HomeScreen({Key? key, required this.projects}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
+  @override
   Widget build(BuildContext context) {
+    final projectViewModel = Provider.of<ProjectViewModel>(context);
+
+    // Log para verificar se os projetos estão sendo carregados
+    print('Carregando lista de projetos...');
+    print('Total de projetos: ${projectViewModel.projects.length}');
+    print('Projetos: ${projectViewModel.projects}');
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Ponto Alto'),
+        title: Text(AppLocalizations.of(context)!.homeTitle),
         backgroundColor: const Color(0xFFB685E8),
       ),
-      body: Container(
+      body: projectViewModel.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : projectViewModel.projects.isEmpty
+          ? Center(
+        child: Text(
+          AppLocalizations.of(context)!.noProjectsMessage,
+          style: const TextStyle(
+            fontSize: 18,
+            color: Color(0xFF5941A9),
+          ),
+        ),
+      )
+          : Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
@@ -37,29 +50,43 @@ class HomeScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Current Projects',
-                    style: TextStyle(
-                      fontFamily:
-                          'PoetsenOne', // Add the custom font in pubspec.yaml
+                  Text(
+                    AppLocalizations.of(context)!.projectsListTitle,
+                    style: const TextStyle(
+                      fontFamily: 'PoetsenOne',
                       fontSize: 24,
                       color: Color(0xFFFF84CE),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const Divider(),
                   Expanded(
                     child: ListView.separated(
-                      itemCount: projects.length,
+                      itemCount: projectViewModel.projects.length,
                       itemBuilder: (context, index) {
-                        return ProjectCard(
-                          project: projects[index],
+                        final project = projectViewModel.projects[index];
+
+                        // Log do projeto atual
+                        print('Projeto ${index + 1}: ${project.projectName}');
+                        print('Nome da Receita: ${project.recipeName}');
+
+                        return ListTile(
+                          title: Text(project.projectName),
+                          subtitle: Text(
+                            '${AppLocalizations.of(context)!.recipeField}: ${project.recipeName}',
+                          ),
                           onTap: () {
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        const Projectdetail()));
+                            Navigator.pushNamed(
+                              context,
+                              '/project-detail',
+                              arguments: project.projectName,
+                            );
                           },
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete),
+                            onPressed: () {
+                              projectViewModel.deleteProjectByName(project.projectName);
+                            },
+                          ),
                         );
                       },
                       separatorBuilder: (context, index) => const Divider(),
@@ -73,36 +100,5 @@ class HomeScreen extends StatelessWidget {
       ),
     );
   }
-}
 
-class ProjectCard extends StatelessWidget {
-  final Project project;
-  final VoidCallback onTap;
-
-  const ProjectCard({Key? key, required this.project, required this.onTap})
-      : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 30.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              project.projectName,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Recipe: ${project.recipeName}',
-              style: const TextStyle(fontSize: 16),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
