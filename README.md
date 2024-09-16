@@ -1,33 +1,91 @@
-<<<<<<< HEAD
-# ponto_alto
 
-A new Flutter project.
+# Desenvolvimento Móvel - Atividade Avaliativa 1
 
-## Getting Started
+## Ponto Alto
+Aplicativo desenvolvido em Flutter e Dart para ajudar na produção de peças de crochê.
 
-This project is a starting point for a Flutter application that follows the
-[simple app state management
-tutorial](https://flutter.dev/to/state-management-sample).
+## Integrantes do grupo
+- Gabriel Ripper de Mendonça Furtado - 804070
+- Leonardo da Silva Lopes - 761880
+- Maria Luisa Edwards de Magalhães Cordeiro - 802645
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Contexto
+Ponto Alto é o aplicativo ideal para entusiastas de crochê. Ele permite que você crie, organize e gerencie suas receitas e projetos de crochê de forma eficiente. Com funcionalidades que permitem acompanhar o progresso de cada projeto, o Ponto Alto é uma ferramenta útil tanto para iniciantes quanto para crocheteiras(os) experientes.
 
-## Assets
+## Tecnologias
 
-The `assets` directory houses images, fonts, and any other files you want to
-include with your application.
+Este projeto foi desenvolvido utilizando as seguintes tecnologias:
 
-The `assets/images` directory contains [resolution-aware
-images](https://flutter.dev/to/resolution-aware-images).
+- [Flutter](https://flutter.dev/)
+- [Dart](https://dart.dev/)
+- [Android Studio](https://developer.android.com/studio)
 
-## Localization
+## Pré-requisitos
 
-This project generates localized messages based on arb files found in
-the `lib/src/localization` directory.
+Antes de começar, você precisará ter instaladas as seguintes ferramentas:
 
-To support additional languages, please visit the tutorial on
-[Internationalizing Flutter apps](https://flutter.dev/to/internationalization).
-=======
-# pontoaltoflutter
->>>>>>> 0cf080b6d9e972b0b337c5bb792041ba1ec8bc56
+- [Git](https://git-scm.com)
+- [Flutter](https://flutter.dev/docs/get-started/install)
+- [Dart SDK](https://dart.dev/get-dart)
+- [Android Studio](https://developer.android.com/studio)
+
+## Como executar o app
+
+Siga os passos abaixo para configurar e rodar o projeto:
+
+1. **Clone o repositório:**
+
+   ```bash
+   git clone https://github.com/maluedwards/pontoaltoflutter.git
+   ```
+
+2. **Instale as dependências do Flutter:**
+
+   ```bash
+   flutter pub get
+   ```
+
+3. **Gere os arquivos de internacionalização:**
+
+   ```bash
+   flutter gen-l10n
+   ```
+
+4. **Execute o aplicativo em um dispositivo físico ou emulador:**
+
+   - Se estiver usando um emulador já configurado no Android Studio, basta rodar o comando:
+
+     ```bash
+     flutter run
+     ```
+
+   - Ou, se você quiser especificar um dispositivo, como o emulador Android padrão:
+
+     ```bash
+     flutter run -d emulator-5554
+     ```
+
+5. **Para rodar os testes automatizados:**
+
+   ```bash
+   flutter test
+   ```
+
+## Internacionalização
+
+O projeto possui suporte para internacionalização (i18n). Após adicionar novas strings de tradução, execute o comando `flutter gen-l10n` para garantir que o sistema de internacionalização seja atualizado corretamente.
+
+## Testes Automatizados
+
+Testes unitários foram implementados para garantir a qualidade do código. Para executá-los, basta rodar o comando:
+
+```bash
+flutter test
+```
+
+Este comando executará todos os testes definidos nos repositórios de projeto e receita, verificando funcionalidades como inserção, atualização e recuperação de dados no banco de dados local.
+
+## Observações
+
+- Para garantir que o Flutter esteja corretamente configurado na sua máquina, você pode rodar o comando `flutter doctor`, que verificará se todos os pré-requisitos estão instalados.
+- O Android Studio será utilizado para rodar o emulador Android, mas você também pode conectar um dispositivo Android físico via USB e rodar o aplicativo nele.
