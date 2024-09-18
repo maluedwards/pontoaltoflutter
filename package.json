@@ -1,0 +1,18 @@
+{
+  "name": "pontoaltoflutter",
+  "version": "1.0.0",
+  "description": "Aplicativo desenvolvido em Flutter e Dart para ajudar na produção de peças de crochê.",
+  "main": "db_server.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}

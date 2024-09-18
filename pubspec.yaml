@@ -24,6 +24,7 @@ dev_dependencies:
   mockito: ^5.0.16
   flutter_lints: ^4.0.0
   sqflite_common_ffi: ^2.2.0
+  http: ^0.13.4
 
 flutter:
   uses-material-design: true
