@@ -46,7 +46,8 @@ class RecipeRepository {
   }
 
   // Get all stitch rows for a recipe by name
-  Future<List<Map<String, dynamic>>> getStitchRowsForRecipeByName(String recipeName) async {
+  Future<List<Map<String, dynamic>>> getStitchRowsForRecipeByName(
+      String recipeName) async {
     final db = await _databaseHelper.database;
     final recipe = await getRecipeByName(recipeName);
     if (recipe != null) {
@@ -66,7 +67,8 @@ class RecipeRepository {
   }
 
   // Add a stitch row for a recipe and update total stitches
-  Future<int> addStitchRow(String instructions, int stitches, int recipeId) async {
+  Future<int> addStitchRow(
+      String instructions, int stitches, int recipeId) async {
     Map<String, dynamic> row = {
       DatabaseHelper.columnRowInstructions: instructions,
       DatabaseHelper.columnRowStitches: stitches,
@@ -76,12 +78,30 @@ class RecipeRepository {
   }
 
   // Get all stitch rows for a recipe
-  Future<List<Map<String, dynamic>>> getStitchRowsForRecipe(int recipeId) async {
+  Future<List<Map<String, dynamic>>> getStitchRowsForRecipe(
+      int recipeId) async {
     return await _databaseHelper.queryStitchRows(recipeId);
   }
 
   // Delete a stitch row and update total stitches
   Future<int> deleteStitchRow(int rowId, int recipeId) async {
     return await _databaseHelper.deleteStitchRow(rowId, recipeId);
+  }
+
+  // Get the total stitches for a recipe by its ID
+  Future<int?> getTotalStitchesById(int recipeId) async {
+    final db = await _databaseHelper.database;
+    final List<Map<String, dynamic>> result = await db.query(
+      DatabaseHelper.recipeTable,
+      columns: [
+        DatabaseHelper.columnRecipeTotalStitches
+      ], // Assuming this is the column name
+      where: '${DatabaseHelper.columnRecipeId} = ?',
+      whereArgs: [recipeId],
+    );
+    if (result.isNotEmpty) {
+      return result.first[DatabaseHelper.columnRecipeTotalStitches] as int?;
+    }
+    return null;
   }
 }

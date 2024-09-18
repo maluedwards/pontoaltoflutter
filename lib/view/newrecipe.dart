@@ -28,9 +28,8 @@ class _NewRecipeScreenState extends State<NewRecipeScreen> {
     if (recipeName.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.recipeNameField +
-              ' ' +
-              AppLocalizations.of(context)!.errorMessage),
+          content: Text(
+              '${AppLocalizations.of(context)!.recipeNameField} ${AppLocalizations.of(context)!.errorMessage}'),
         ),
       );
       return;
@@ -61,10 +60,12 @@ class _NewRecipeScreenState extends State<NewRecipeScreen> {
     // Usar Navigator com MaterialPageRoute para manter a BottomNavigationBar visível
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => const RecipesScreen(), // Voltando para a tela de receitas
+        builder: (context) =>
+            const RecipesScreen(), // Voltando para a tela de receitas
       ),
     );
-    Provider.of<RecipeViewModel>(context, listen: false).fetchAllRecipes(); // Atualiza a lista de receitas
+    Provider.of<RecipeViewModel>(context, listen: false)
+        .fetchAllRecipes(); // Atualiza a lista de receitas
   }
 
   @override
@@ -106,11 +107,13 @@ class _NewRecipeScreenState extends State<NewRecipeScreen> {
                   ),
                   DropdownMenuItem(
                     value: 2,
-                    child: Text(AppLocalizations.of(context)!.difficultyIntermediate),
+                    child: Text(
+                        AppLocalizations.of(context)!.difficultyIntermediate),
                   ),
                   DropdownMenuItem(
                     value: 3,
-                    child: Text(AppLocalizations.of(context)!.difficultyAdvanced),
+                    child:
+                        Text(AppLocalizations.of(context)!.difficultyAdvanced),
                   ),
                 ],
                 onChanged: (value) {

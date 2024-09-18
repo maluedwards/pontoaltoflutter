@@ -36,22 +36,25 @@ class MyApp extends StatelessWidget {
             Locale('pt', ''), // Portuguese
           ],
           onGenerateTitle: (BuildContext context) =>
-          AppLocalizations.of(context)!.appTitle,
+              AppLocalizations.of(context)!.appTitle,
           theme: ThemeData(),
           darkTheme: ThemeData.dark(),
           themeMode: settingsController.themeMode,
           initialRoute: '/',
           routes: {
-            '/': (context) => const HomeScreen(), // Página inicial sem o parâmetro 'projects'
-            '/recipes': (context) => RecipesScreen(),
+            '/': (context) =>
+                const HomeScreen(), // Página inicial sem o parâmetro 'projects'
+            '/recipes': (context) => const RecipesScreen(),
             '/new-recipe': (context) => const NewRecipeScreen(),
             '/recipe-detail': (context) => RecipeDetails(
-              recipeName: ModalRoute.of(context)!.settings.arguments as String,
-            ),
+                  recipeName:
+                      ModalRoute.of(context)!.settings.arguments as String,
+                ),
             '/new-project': (context) => const NewProjectScreen(recipeName: ''),
             '/project-detail': (context) => ProjectDetail(
-              projectName: ModalRoute.of(context)!.settings.arguments as String,
-            ),
+                  projectName:
+                      ModalRoute.of(context)!.settings.arguments as String,
+                ),
             SettingsView.routeName: (context) =>
                 SettingsView(controller: settingsController),
           },

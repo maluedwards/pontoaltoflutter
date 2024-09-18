@@ -23,7 +23,8 @@ class _ProjectDetailState extends State<ProjectDetail> {
   final RecipeRepository _recipeRepository = RecipeRepository();
 
   int currentStitch = 0;
-  int totalStitches = 0;
+  int doneStitches = 0;
+  int totalStitches = 0; // Now fetched from the database
 
   @override
   void initState() {
@@ -42,12 +43,14 @@ class _ProjectDetailState extends State<ProjectDetail> {
         recipeNameFuture = _recipeRepository.getRecipeNameById(recipeId);
 
         setState(() {
+          doneStitches = project['done_stitches'];
           currentStitch = project['current_stitch'];
         });
 
-        stitchRowsFuture.then((rows) {
+        // Fetch the total stitches from the recipe table
+        _recipeRepository.getTotalStitchesById(recipeId).then((total) {
           setState(() {
-            totalStitches = rows.fold(0, (sum, row) => sum + (row['stitches'] as int));
+            totalStitches = total ?? 0; // Handle null in case of missing data
           });
         });
       }
@@ -58,23 +61,30 @@ class _ProjectDetailState extends State<ProjectDetail> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('${AppLocalizations.of(context)!.projectDetailTitle}: ${widget.projectName}'),
+        //Project name
+        title: Text(
+            '${AppLocalizations.of(context)!.projectDetailTitle}: ${widget.projectName}'),
         backgroundColor: const Color(0xFFB685E8),
       ),
       body: FutureBuilder(
-        future: Future.wait([projectFuture, stitchRowsFuture, recipeNameFuture]),
+        future:
+            Future.wait([projectFuture, stitchRowsFuture, recipeNameFuture]),
         builder: (context, AsyncSnapshot<List<dynamic>> snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
-            return Center(child: Text('${AppLocalizations.of(context)!.errorMessage}: ${snapshot.error}'));
+            return Center(
+                child: Text(
+                    '${AppLocalizations.of(context)!.errorMessage}: ${snapshot.error}'));
           } else if (snapshot.hasData) {
             final project = snapshot.data![0] as Map<String, dynamic>?;
             final stitchRows = snapshot.data![1] as List<Map<String, dynamic>>;
             final recipeName = snapshot.data![2] as String?;
 
             if (project == null) {
-              return Center(child: Text(AppLocalizations.of(context)!.projectNotFoundMessage));
+              return Center(
+                  child: Text(
+                      AppLocalizations.of(context)!.projectNotFoundMessage));
             }
 
             int currentRow = _calculateCurrentRow(currentStitch, stitchRows);
@@ -93,32 +103,42 @@ class _ProjectDetailState extends State<ProjectDetail> {
                     ),
                   ),
                   const SizedBox(height: 8),
+                  //recipe name
                   Text(
                     '${AppLocalizations.of(context)!.recipeField}: ${recipeName ?? AppLocalizations.of(context)!.recipeNotFound}',
-                    style: const TextStyle(fontSize: 18, color: Color(0xFFFF84CE)),
+                    style:
+                        const TextStyle(fontSize: 18, color: Color(0xFFFF84CE)),
                   ),
                   const SizedBox(height: 20),
                   const Divider(),
                   const SizedBox(height: 10),
                   Text(
                     AppLocalizations.of(context)!.stitchRowsLabel,
-                    style: const TextStyle(fontSize: 20, color: Color(0xFF5941A9)),
+                    style:
+                        const TextStyle(fontSize: 20, color: Color(0xFF5941A9)),
                   ),
                   const SizedBox(height: 10),
+                  //Total stitches
+                  Text(
+                      '${AppLocalizations.of(context)!.totalStitches}: $totalStitches'),
+                  //List of stitch rows
                   Expanded(
                     child: ListView.builder(
                       itemCount: stitchRows.length,
                       itemBuilder: (context, index) {
                         final row = stitchRows[index];
                         bool isCurrentRow = currentRow == (index + 1);
-                        Color textColor = isCurrentRow ? const Color(0xFFFF84CE) : Colors.black;
+                        Color textColor = isCurrentRow
+                            ? const Color(0xFFFF84CE)
+                            : Colors.black;
 
                         return ListTile(
                           title: Text(
                             '${AppLocalizations.of(context)!.rowLabel} ${index + 1}: ${row['instructions']}',
                             style: TextStyle(color: textColor),
                           ),
-                          subtitle: Text('${row['stitches']} ${AppLocalizations.of(context)!.stitchesField}'),
+                          subtitle: Text(
+                              '${row['stitches']} ${AppLocalizations.of(context)!.stitchesField}'),
                         );
                       },
                     ),
@@ -137,7 +157,8 @@ class _ProjectDetailState extends State<ProjectDetail> {
     );
   }
 
-  int _calculateCurrentRow(int currentStitch, List<Map<String, dynamic>> stitchRows) {
+  int _calculateCurrentRow(
+      int currentStitch, List<Map<String, dynamic>> stitchRows) {
     int cumulativeStitches = 0;
     for (int i = 0; i < stitchRows.length; i++) {
       cumulativeStitches += stitchRows[i]['stitches'] as int;
@@ -149,43 +170,57 @@ class _ProjectDetailState extends State<ProjectDetail> {
     return stitchRows.length;
   }
 
+  //Buttons construction
   Widget _buildStitchControlButtons() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
+        //- BUTTON
         ElevatedButton(
           onPressed: currentStitch > 0
               ? () {
-            setState(() {
-              currentStitch--;
-              _projectRepository.updateProjectStitch(currentStitch, widget.projectName);
-            });
-          }
+                  setState(() {
+                    //subctract 1 from currentstitch
+                    currentStitch--;
+                    //update db
+                    _projectRepository.updateProjectStitch(
+                        currentStitch, widget.projectName);
+                  });
+                }
               : null,
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFB685E8).withOpacity(currentStitch > 0 ? 1 : 0.5),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            backgroundColor: const Color(0xFFB685E8)
+                .withOpacity(currentStitch > 0 ? 1 : 0.5),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           ),
           child: const Text('-'),
         ),
+        //Text of stitches
         const SizedBox(width: 20),
         Text(
           '$currentStitch',
           style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
         ),
         const SizedBox(width: 20),
+        //+ BUTTON
         ElevatedButton(
           onPressed: currentStitch < totalStitches
               ? () {
-            setState(() {
-              currentStitch++;
-              _projectRepository.updateProjectStitch(currentStitch, widget.projectName);
-            });
-          }
+                  setState(() {
+                    //add 1 to current stitch
+                    currentStitch++;
+                    //update db
+                    _projectRepository.updateProjectStitch(
+                        currentStitch, widget.projectName);
+                  });
+                }
               : null,
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFB685E8).withOpacity(currentStitch < totalStitches ? 1 : 0.5),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            backgroundColor: const Color(0xFFB685E8)
+                .withOpacity(currentStitch < totalStitches ? 1 : 0.5),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           ),
           child: const Text('+'),
         ),
@@ -198,13 +233,15 @@ class _ProjectDetailState extends State<ProjectDetail> {
       child: ElevatedButton(
         onPressed: currentStitch == totalStitches
             ? () async {
-          await _projectRepository.deleteProject(projectId);
-          Provider.of<ProjectViewModel>(context, listen: false).fetchAllProjects();
-          Navigator.pop(context);
-        }
+                await _projectRepository.deleteProject(projectId);
+                Provider.of<ProjectViewModel>(context, listen: false)
+                    .fetchAllProjects();
+                Navigator.pop(context);
+              }
             : null,
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFFF84CE).withOpacity(currentStitch == totalStitches ? 1 : 0.5),
+          backgroundColor: const Color(0xFFFF84CE)
+              .withOpacity(currentStitch == totalStitches ? 1 : 0.5),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         child: Text(AppLocalizations.of(context)!.finalizeProjectButton),

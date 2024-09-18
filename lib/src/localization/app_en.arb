@@ -37,5 +37,6 @@
   "invalidRowError": "Please enter valid instructions and stitches",
   "instructionsField": "Instructions",
   "numberOfStitchesField": "Number of Stitches",
-  "projectField": "Project"
+  "projectField": "Project",
+  "totalStitches": "Total stiches"
 }

@@ -37,5 +37,6 @@
   "invalidRowError": "Por favor, insira instruções e pontos válidos",
   "instructionsField": "Instruções",
   "numberOfStitchesField": "Número de Pontos",
-  "projectField": "Projeto"
+  "projectField": "Projeto",
+  "totalStitches": "Total de pontos"
 }

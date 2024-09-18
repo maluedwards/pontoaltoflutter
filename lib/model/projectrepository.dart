@@ -33,7 +33,7 @@ class ProjectRepository {
     final db = await _databaseHelper.database;
     return await db.update(
       DatabaseHelper.projectTable,
-      {DatabaseHelper.columnProjectCurrentStitch: newCount},
+      {DatabaseHelper.columnProjectDoneStitches: newCount},
       where: '${DatabaseHelper.columnProjectName} = ?',
       whereArgs: [projectName],
     );

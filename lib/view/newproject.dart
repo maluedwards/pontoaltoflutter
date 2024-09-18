@@ -16,7 +16,8 @@ class NewProjectScreen extends StatefulWidget {
 
 class _NewProjectScreenState extends State<NewProjectScreen> {
   final ProjectRepository _projectRepository = ProjectRepository();
-  final RecipeRepository _recipeRepository = RecipeRepository(); // Para buscar o ID da receita
+  final RecipeRepository _recipeRepository =
+      RecipeRepository(); // Para buscar o ID da receita
   String projectName = '';
   String error = '';
 
@@ -58,7 +59,8 @@ class _NewProjectScreenState extends State<NewProjectScreen> {
               children: [
                 Text(
                   '${AppLocalizations.of(context)!.recipeField}:',
-                  style: const TextStyle(fontSize: 22, color: Color(0xFF5941A9)),
+                  style:
+                      const TextStyle(fontSize: 22, color: Color(0xFF5941A9)),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -80,7 +82,8 @@ class _NewProjectScreenState extends State<NewProjectScreen> {
               onPressed: () async {
                 if (projectName.isEmpty) {
                   setState(() {
-                    error = AppLocalizations.of(context)!.projectNameField + ' is required';
+                    error =
+                        '${AppLocalizations.of(context)!.projectNameField} is required';
                   });
                   return;
                 }
@@ -88,7 +91,8 @@ class _NewProjectScreenState extends State<NewProjectScreen> {
                 try {
                   // Log para verificar a busca da receita
                   print('Buscando receita: ${widget.recipeName}');
-                  final recipe = await _recipeRepository.getRecipeByName(widget.recipeName);
+                  final recipe = await _recipeRepository
+                      .getRecipeByName(widget.recipeName);
 
                   if (recipe == null) {
                     setState(() {
@@ -102,7 +106,8 @@ class _NewProjectScreenState extends State<NewProjectScreen> {
                   print('ID da receita encontrada: $recipeId');
 
                   // Log para os dados do projeto
-                  print('Inserindo projeto: $projectName com receita $recipeId');
+                  print(
+                      'Inserindo projeto: $projectName com receita $recipeId');
 
                   await _projectRepository.insertProject({
                     'project_name': projectName,
@@ -116,10 +121,12 @@ class _NewProjectScreenState extends State<NewProjectScreen> {
                   print('Projeto inserido com sucesso!');
 
                   // Atualizando a lista de projetos
-                  Provider.of<ProjectViewModel>(context, listen: false).fetchAllProjects();
+                  Provider.of<ProjectViewModel>(context, listen: false)
+                      .fetchAllProjects();
 
                   // Redirecionando para a HomeScreen
-                  Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+                  Navigator.of(context)
+                      .pushNamedAndRemoveUntil('/', (route) => false);
                 } catch (e) {
                   setState(() {
                     error = 'Failed to save project: $e';
