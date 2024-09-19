@@ -41,19 +41,23 @@ Siga os passos abaixo para configurar e rodar o projeto:
    git clone https://github.com/maluedwards/pontoaltoflutter.git
    ```
 
-2. **Instale as dependências do Flutter:**
+2. **Instale as dependências do Flutter na raiz do projeto:**
 
    ```bash
    flutter pub get
    ```
+3. **Instale as dependências do Node na raiz do projeto:**
+      ```
+      npm install
+      ```
 
-3. **Gere os arquivos de internacionalização:**
+4. **Gere os arquivos de internacionalização:**
 
    ```bash
    flutter gen-l10n
    ```
 
-4. **Execute o aplicativo em um dispositivo físico ou emulador:**
+5. **Execute o aplicativo em um dispositivo físico ou emulador:**
 
    - Se estiver usando um emulador já configurado no Android Studio, basta rodar o comando:
 
@@ -66,12 +70,12 @@ Siga os passos abaixo para configurar e rodar o projeto:
      ```bash
      flutter run -d emulator-5554
      ```
-5. **Execute o backend em JavaScript em outro terminal:**
+6. **Execute o backend em JavaScript em outro terminal:**
       - Execute o comando na raiz do projeto:
       ```
       node db_server.js
       ``` 
-6. **Para rodar os testes automatizados:**
+7. **Para rodar os testes automatizados:**
 
    ```bash
    flutter test
