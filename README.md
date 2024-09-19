@@ -1,7 +1,7 @@
 
-# Desenvolvimento Móvel - Atividade Avaliativa 1
+# Desenvolvimento Móvel - Atividade Avaliativa 2
 
-## Ponto Alto
+## Ponto Alto - versão Flutter
 Aplicativo desenvolvido em Flutter e Dart para ajudar na produção de peças de crochê.
 
 ## Integrantes do grupo
