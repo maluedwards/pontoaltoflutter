@@ -19,6 +19,7 @@ Este projeto foi desenvolvido utilizando as seguintes tecnologias:
 - [Flutter](https://flutter.dev/)
 - [Dart](https://dart.dev/)
 - [Android Studio](https://developer.android.com/studio)
+- [Node JS](https://nodejs.org/pt)
 
 ## Pré-requisitos
 
@@ -28,6 +29,7 @@ Antes de começar, você precisará ter instaladas as seguintes ferramentas:
 - [Flutter](https://flutter.dev/docs/get-started/install)
 - [Dart SDK](https://dart.dev/get-dart)
 - [Android Studio](https://developer.android.com/studio)
+- [Node JS](https://nodejs.org/en/download/prebuilt-installer)
 
 ## Como executar o app
 
@@ -64,8 +66,12 @@ Siga os passos abaixo para configurar e rodar o projeto:
      ```bash
      flutter run -d emulator-5554
      ```
-
-5. **Para rodar os testes automatizados:**
+5. **Execute o backend em JavaScript em outro terminal:**
+      - Execute o comando na raiz do projeto:
+      ```
+      node db_server.js
+      ``` 
+6. **Para rodar os testes automatizados:**
 
    ```bash
    flutter test
